@@ -4712,5 +4712,138 @@
   layout();
 })();
 </script>
+<style>
+  .snd-toggle { position: fixed; left: 16px; bottom: 18px; z-index: 2147483000; width: 42px; height: 42px; border-radius: 50%;
+    border: 1px solid #d8d0bf; background: rgba(255,253,248,.96); color: #1c1a17; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 4px 14px rgba(40,30,20,.14); transition: border-color .2s ease, transform .15s ease; }
+  .snd-toggle:hover { border-color: #9c7a42; transform: translateY(-1px); }
+  .snd-toggle:focus-visible { outline: 2px solid #9c7a42; outline-offset: 3px; }
+  .snd-toggle svg { width: 20px; height: 20px; }
+  .snd-toggle .off { display: none; }
+  .snd-toggle[aria-pressed="false"] .on { display: none; }
+  .snd-toggle[aria-pressed="false"] .off { display: inline; }
+    justify-content: center; gap: 6px 10px; max-width: calc(100vw - 24px); padding: 8px 12px; border-radius: 14px; background: #1c1a17; color: #f7f4ee;
+    font: 500 12px/1.2 Inter, system-ui, sans-serif; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+</style>
+<script>
+/* Sons d'interface générés (aucun fichier audio), coupables à tout moment. */
+(function () {
+  var ctx = null, master = null;
+  var state = { on: true, click: 1, page: 2 };
+  try { var sv = JSON.parse(localStorage.getItem('duplexSnd') || 'null'); if (sv && typeof sv.on === 'boolean') state.on = sv.on; } catch (e) {}
+  function save() { try { localStorage.setItem('duplexSnd', JSON.stringify({ on: state.on })); } catch (e) {} }
+  window.__sndCount = { click: 0, page: 0 };
+
+  function unlock() {
+    if (!ctx) {
+      var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+      ctx = new AC(); master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
+    }
+    if (ctx.state === 'suspended') ctx.resume();
+  }
+  ['pointerdown', 'touchend', 'keydown'].forEach(function (ev) { window.addEventListener(ev, unlock, { capture: true, passive: true }); });
+
+  function noiseBuf(dur) {
+    var n = Math.floor(ctx.sampleRate * dur), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+    for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    return b;
+  }
+  function env(g, t, a, peak, dec) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + dec); }
+
+  var CLICKS = {
+    1: function (t) { // tic feutré : souffle filtré très court + petite note grave
+      var s = ctx.createBufferSource(); s.buffer = noiseBuf(0.05);
+      var f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1800; f.Q.value = 1.2;
+      var g = ctx.createGain(); env(g, t, 0.002, 0.22, 0.035); s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t + 0.06);
+      var o = ctx.createOscillator(); o.frequency.setValueAtTime(190, t); o.frequency.exponentialRampToValueAtTime(120, t + 0.05);
+      var g2 = ctx.createGain(); env(g2, t, 0.003, 0.12, 0.05); o.connect(g2); g2.connect(master); o.start(t); o.stop(t + 0.07);
+    },
+    2: function (t) { // bois : petit bloc de bois
+      var o = ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(1150, t); o.frequency.exponentialRampToValueAtTime(700, t + 0.04);
+      var f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 900; f.Q.value = 4;
+      var g = ctx.createGain(); env(g, t, 0.002, 0.25, 0.06); o.connect(f); f.connect(g); g.connect(master); o.start(t); o.stop(t + 0.08);
+    },
+    3: function (t) { // bulle : petit « pop » doux
+      var o = ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(520, t); o.frequency.exponentialRampToValueAtTime(260, t + 0.07);
+      var g = ctx.createGain(); env(g, t, 0.004, 0.16, 0.07); o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.09);
+    }
+  };
+  var PAGES = {
+    1: function (t) { // page qui tourne : froissement qui monte puis retombe
+      var dur = 0.42, s = ctx.createBufferSource(); s.buffer = noiseBuf(dur);
+      var f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 0.9;
+      f.frequency.setValueAtTime(1200, t); f.frequency.exponentialRampToValueAtTime(4200, t + 0.18); f.frequency.exponentialRampToValueAtTime(2200, t + dur);
+      var g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.09, t + 0.12);
+      g.gain.exponentialRampToValueAtTime(0.03, t + 0.24); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t + dur);
+    },
+    2: function (t) { // souffle : glissement doux et feutré
+      var dur = 0.32, s = ctx.createBufferSource(); s.buffer = noiseBuf(dur);
+      var f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(500, t); f.frequency.exponentialRampToValueAtTime(1600, t + 0.14); f.frequency.exponentialRampToValueAtTime(400, t + dur);
+      var g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.14, t + 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t + dur);
+    },
+    3: function (t) { // carillon : deux notes douces
+      [[660, 0], [990, 0.07]].forEach(function (n) {
+        var o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = n[0];
+        var g = ctx.createGain(); env(g, t + n[1], 0.008, 0.06, 0.45); o.connect(g); g.connect(master); o.start(t + n[1]); o.stop(t + n[1] + 0.5);
+      });
+    }
+  };
+  var lastPlay = 0;
+  function play(kind) {
+    if (!state.on || !ctx || ctx.state !== 'running') return;
+    var now = ctx.currentTime;
+    if (kind === 'click' && now - lastPlay < 0.04) return;
+    lastPlay = now;
+    window.__sndCount[kind]++;
+    (kind === 'click' ? CLICKS[state.click] : PAGES[state.page])(now + 0.005);
+  }
+  window.duplexSound = play;
+
+  // Clic : tous les éléments cliquables du site
+  var SEL = 'button, a[href], [role="button"], summary, label[for], input[type="checkbox"], input[type="radio"], .gal-item, .recit-card, .cat';
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest && e.target.closest(SEL);
+    if (!el || el.classList.contains('snd-toggle')) return;
+    play('click');
+  }, true);
+
+  // Page qui tourne : une seule fois par changement de section
+  function stageIndex() {
+    var st = document.querySelectorAll('.stage-3d'), mid = window.scrollY + window.innerHeight / 2, idx = 0;
+    for (var i = 0; i < st.length; i++) { var top = st[i].getBoundingClientRect().top + window.scrollY; if (top <= mid) idx = i; }
+    return idx;
+  }
+  var cur = stageIndex();
+  window.addEventListener('pager:settled', function () { var i = stageIndex(); if (i !== cur) { cur = i; play('page'); } });
+
+  // Bouton son (en bas à gauche)
+  var t = document.createElement('button');
+  t.type = 'button'; t.className = 'snd-toggle';
+  t.innerHTML = '<svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>' +
+    '<svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>';
+  function syncT() { t.setAttribute('aria-pressed', state.on ? 'true' : 'false'); t.setAttribute('aria-label', state.on ? 'Couper le son' : 'Activer le son'); t.title = t.getAttribute('aria-label'); }
+  t.addEventListener('click', function () { unlock(); state.on = !state.on; save(); syncT(); if (state.on) setTimeout(function () { play('click'); }, 30); });
+  syncT(); document.body.appendChild(t);
+
+})();
+</script>
+<script>
+/* Sur téléphone, la version ordinateur propose de basculer vers la version téléphone. */
+(function () {
+  var sw = Math.min(screen.width || 9999, screen.height || 9999);
+  var phone = /iPhone|iPod|Android.+Mobile/i.test(navigator.userAgent) || (window.matchMedia('(pointer: coarse)').matches && sw < 700);
+  if (!phone) return;
+  var b = document.createElement('div');
+  b.setAttribute('role', 'note');
+  b.style.cssText = 'position:fixed;left:12px;right:12px;top:12px;z-index:2147483646;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:#1c1a17;color:#f7f4ee;font:500 14px/1.35 Inter,system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.25)';
+  b.innerHTML = '<span style="flex:1">Vous êtes sur téléphone ?</span>' +
+    '<a href="mobile.html" style="flex:none;padding:8px 12px;border-radius:999px;background:#9c7a42;color:#fff;text-decoration:none;font-weight:600">Version téléphone</a>' +
+    '<button type="button" aria-label="Fermer" style="flex:none;width:30px;height:30px;border:0;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:18px;line-height:1">×</button>';
+  b.querySelector('button').onclick = function () { b.remove(); };
+  document.body.appendChild(b);
+})();
+</script>
 </body>
 </html>
