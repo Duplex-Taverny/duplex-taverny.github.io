@@ -58,6 +58,14 @@
   }
   .intro { margin: 10px auto 0; max-width: 460px; color: var(--stone); }
   .head { display: flex; flex-direction: column; align-items: center; }
+  .welcome-txt { margin: 14px auto 0; max-width: 520px; color: var(--stone); }
+  .welcome-txt b { color: var(--ink); font-weight: 600; }
+  .photo-note { display: flex; gap: 12px; align-items: flex-start; text-align: left; margin: 16px auto 0; max-width: 520px; padding: 13px 16px;
+    border-radius: 14px; background: #f4eee2; border: 1px dashed rgba(156,122,66,.45); }
+  .photo-note svg { flex: none; width: 22px; height: 22px; color: var(--brass); margin-top: 1px; }
+  .photo-note p { margin: 0; font-size: 14px; line-height: 1.55; color: var(--stone); }
+  .photo-note b { color: var(--ink); font-weight: 600; }
+  .choose { margin: 0 0 -12px; font-size: 13.5px; color: var(--stone); }
 
   .choices {
     width: 100%;
@@ -117,6 +125,8 @@
 
   @media (max-width: 560px) {
     main { padding-block: 28px; gap: 22px; }
+    .welcome-txt { font-size: 14.5px; }
+    .photo-note p { font-size: 13.5px; }
     .choices { grid-template-columns: 1fr; gap: 12px; }
     .choice { padding: 20px 18px 18px; }
     .choice svg { width: 38px; height: 38px; }
@@ -143,8 +153,14 @@
       <path d="M113 12v6M109.5 18h7l-1 3h-5z"/>
     </svg>
     <h1>Un duplex lumineux au cœur de Taverny</h1>
-    <p class="intro">Le site existe en deux versions, chacune pensée pour son écran. Choisissez celle qui correspond à votre appareil.</p>
+    <p class="welcome-txt">Bienvenue&nbsp;! Nous sommes des particuliers et vendons nous-mêmes notre duplex. Ce site réunit <b>tout ce qu’il faut savoir</b> sur le bien et son environnement&nbsp;: descriptif, plans, frais et vie de quartier.</p>
+    <div class="photo-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.6-2.2h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.4"/></svg>
+      <p>Pour le moment, nous avons choisi de ne pas publier de photos. Elles seront réalisées d’ici une quinzaine de jours et nous vous les enverrons <b>volontiers sur simple demande</b>.</p>
+    </div>
   </div>
+
+  <p class="choose">Le site existe en deux versions, chacune pensée pour son écran. Choisissez la vôtre&nbsp;:</p>
 
   <div class="choices">
     <a class="choice" id="choicePc" href="desktop.html">
@@ -162,7 +178,6 @@
   </div>
 
   <p class="note">Sur tablette, prenez la version ordinateur à l'horizontale et la version téléphone à la verticale.</p>
-  <p class="contact-line">Une question&nbsp;? <a href="mailto:duplex.taverny@gmail.com?subject=Duplex%20%C3%A0%20Taverny%20%3A%20demande%20d%E2%80%99information">duplex.taverny@gmail.com</a></p>
 </main>
 
 <script>
@@ -177,5 +192,6 @@
     reco.appendChild(b);
   })();
 </script>
+<script data-goatcounter="https://duplextaverny.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body>
 </html>
